@@ -1,7 +1,7 @@
 from __future__ import division
 import numpy
 import os
-import  cPickle as pkl
+import pickle as pkl
 import matplotlib.pylab as plt
 
 # file_list =[[]]*len(range(2500, 10000, 2500))
@@ -9,7 +9,7 @@ file_list = []
 for j, i in enumerate(range(2500, 190000, 2500)):
     file = open('/root/workspace/TMNMT/.translate/TM2.B7.bpe.dev.translate.iter='+str(i)+'.pkl', 'r')
     file_list.append(pkl.load(file))    
-    print i
+    print(i)
     
 action = [[] for _ in range(len(file_list))]
 gating = [[] for _ in range(len(file_list))]
@@ -50,8 +50,8 @@ for i in range(len(file_list)):
     aver_action.append(numpy.asarray(action_init[i]).mean())
     aver_gating.append(numpy.asarray(gating_init[i]).mean())
 
-print aver_action
-print aver_gating
+print(aver_action)
+print(aver_gating)
 plt.plot(aver_action, '--*b')
 plt.plot(aver_gating, '--*r')
 plt.savefig('/root/workspace/TMNMT/dl4mt-tm2/Myfig1.jpg') 

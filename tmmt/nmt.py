@@ -4,9 +4,8 @@ Build a neural machine translation model with soft attention
 import theano
 import theano.tensor as tensor
 import copy
-from layer import *
-from optimizer import *
-
+from tmmt.layer import *
+from tmmt.optimizer import *
 
 # initialize all parameters
 def init_params(options, pix=''):
@@ -158,12 +157,12 @@ def build_model(tparams, inps, options, pix='', return_cost=False, with_compile=
         opt_ret['cost'] =  cost
 
     if with_compile:
-        print 'Build f_critic...',
+        print('Build f_critic...',)
         f_critic = theano.function(inps, [opt_ret['hids'], opt_ret['ctxs'], opt_ret['logit']],
                                    name='f_critic', profile=profile)
 
         opt_ret['f_critic'] = f_critic
-        print 'Done'
+        print('Done')
 
     return opt_ret
 
@@ -210,10 +209,10 @@ def build_attender(tparams, inps, options, pix='', one_step=False):
 
     else:
         ret = recurrence(prev_hids, prev_emb, ctx, x_mask)
-        print 'Build f_attend...',
+        print('Build f_attend...',)
 
         f_attend = theano.function(inps, ret, name='f_attend', profile=profile)
-        print 'Done.'
+        print('Done.')
 
         return f_attend
 
@@ -247,10 +246,10 @@ def build_sampler(tparams, options, trng, pix=''):
     init_state = get_layer('ff')[1](tparams, ctx_mean, options,
                                     prefix=pix+'ff_state', activ='tanh')
 
-    print 'Building f_init...',
+    print('Building f_init...',)
     outs = [init_state, ctx]
     f_init = theano.function([x], outs, name='f_init', profile=profile)
-    print 'Done'
+    print('Done')
 
     # x: 1 x 1
     y = tensor.vector('y_sampler', dtype='int64')
@@ -292,11 +291,11 @@ def build_sampler(tparams, options, trng, pix=''):
 
     # compile a function to do the whole thing above, next word probability,
     # sampled word for the next target, next hidden state to be used
-    print 'Building f_next...',
+    print('Building f_next...',)
     inps = [y, ctx, init_state]
     outs = [next_probs, next_sample, next_state, ctxs, atts]
     f_next = theano.function(inps, outs, name='f_next', profile=profile)
-    print 'Done'
+    print('Done')
 
     return f_init, f_next
 
@@ -805,32 +804,32 @@ def gen_sample_multi(tparams, funcs,
 def build_networks(options, model=' ', train=True):
     funcs = dict()
 
-    print 'Building model: X -> Y & Y -> X model'
+    print('Building model: X -> Y & Y -> X model')
     params_xy  = init_params(options, 'xy_')
     params_xy0 = copy.copy(params_xy)
-    print 'Done.'
+    print('Done.')
 
     if options.get('see_pretrain', False):
-        print 'load the pretrained NMT-models...'
+        print('load the pretrained NMT-models...')
         params_xy0  = load_params2(options['baseline_xy'], params_xy0, mode='xy_')
         tparams_xy0 = init_tparams(params_xy0)  # pre-trained E->F model
-        print 'Done.'
+        print('Done.')
 
     # use pre-trained models
     if options['use_pretrain']:
-        print 'use pretrained NMT model as base.'
+        print('use pretrained NMT model as base.')
         params_xy = copy.copy(params_xy0)
 
     # reload parameters
     if train:
         if options['reload_'] and os.path.exists(options['saveto']):
-            print 'Reloading pre-saved parameters'
+            print('Reloading pre-saved parameters')
             params_xy = load_params(options['saveto'], params_xy)
         else:
-            print 'Start a new model'
+            print ('Start a new model')
     else:
 
-        print 'Reloading NMT parameters'
+        print('Reloading NMT parameters')
         params_xy = load_params(model, params_xy)
 
     tparams_xy = init_tparams(params_xy)
@@ -857,8 +856,9 @@ def build_networks(options, model=' ', train=True):
         txy1s.append(tensor.matrix('xy1{}'.format(k+1), dtype='int64'))
         txy1s_mask.append(tensor.matrix('xy1{}_mask'.format(k+1), dtype='float32'))
 
-    print 'build forward-attention models ({} models simultaneously)...'.format(options.get('n_inputs', 4)/2)
-    ret_xy11 = build_model(tparams_xy, [x1, x1_mask, y1, y1_mask], options, 'xy_', False, True)   # X->Y curr
+    print('build forward-attention models ({} models simultaneously)...'.format(options.get('n_inputs', 4)/2))
+    ret_xy11 = build_model(tparams_xy, [x1, x1_mask, y1, y1_mask], options,
+                           'xy_', return_cost=False, with_compile=True)   # X->Y curr
 
     ret_xyss = []
     for k in range(K):
@@ -866,15 +866,15 @@ def build_networks(options, model=' ', train=True):
                                     [xs[k], xs_mask[k], ys[k], ys_mask[k]],
                                     options, 'xy_', False, False))  # TM
 
-    print 'build mapping (bi-linear model)!'
+    print('build mapping (bi-linear model)!')
     params_map  = OrderedDict()
 
     # use diagonal matrix
     if options['diagonal']:
-        print 'use diagonal matrix'
+        print('use diagonal matrix')
         bmap = 'bd'
     else:
-        print 'use full matrix'
+        print('use full matrix')
         bmap = 'bi'
 
     # params for copying
@@ -884,13 +884,13 @@ def build_networks(options, model=' ', train=True):
                                          nin2=2 * options['dim'], eye=options['eye'])
     else:
         if not options.get('nn_coverage', False):
-            print 'use linguistic coverage'
+            print('use linguistic coverage')
             params_map = get_layer(bmap)[0](options, params_map, prefix='map_bi',
                                             nin1=2 * options['dim'],
                                             nin2=2 * options['dim'],
                                             bias=True, eye=options['eye'])
         else:
-            print 'use neural network coverage'
+            print('use neural network coverage')
             params_map = get_layer('bg')[0](options, params_map, prefix='map_bg',
                                             nin1=2 * options['dim'],
                                             nin2=2 * options['dim'],
@@ -912,14 +912,14 @@ def build_networks(options, model=' ', train=True):
     # reload parameters
     if train:
         if options['reload_'] and os.path.exists(options['saveto']):
-            print 'Reloading pre-saved parameters'
+            print( 'Reloading pre-saved parameters')
             params_map = load_params(options['saveto'], params_map)
-            print 'Done.'
+            print ('Done.')
 
     else:
-        print 'Reloading mapping parameters'
+        print('Reloading mapping parameters')
         params_map = load_params(model, params_map)
-        print 'Done.'
+        print ('Done.')
 
     tparams_map = init_tparams(params_map)
 
@@ -957,21 +957,21 @@ def build_networks(options, model=' ', train=True):
             if not options.get('nn_coverage', False):
 
                 if options.get('cos_sim', True):
-                    print 'use cos-similarity'
+                    print('use cos-similarity')
                     mapping   = get_layer(bmap)[1](tparams_map,
                                                    normalize(cur_ctx1[None, :, :]),
                                                    normalize(tm_ctx2),
                                                    prev_att[None, :, :],
                                                    prefix='map_bi', activ='lambda x: x')[0]  # batchsize x dec_tm
                 else:
-                    print 'use inner-product'
+                    print('use inner-product')
                     mapping   = get_layer(bmap)[1](tparams_map,
                                                    cur_ctx1[None, :, :],
                                                    tm_ctx2,
                                                    prev_att[None, :, :],
                                                    prefix='map_bi', activ='lambda x: x')[0]  # batchsize x dec_tm
 
-                attens    = softmax(mapping * tau, mask=tm_mask)    # bs x dec_tm
+                attens = softmax(mapping * tau, mask=tm_mask)    # bs x dec_tm
 
 
                 att_tmh   = tensor.batched_dot(attens[:, None, :],            # bs x dec_tm
@@ -1031,11 +1031,11 @@ def build_networks(options, model=' ', train=True):
         outs += [mapping, gates, attens, coverage]
 
 
-    print 'Building Mapping functions, ...',
+    print('Building Mapping functions, ...',)
     f_map = theano.function(inps, outs, profile=profile)
-    print 'Done.'
+    print ('Done.')
 
-    print 'build loss function (w/o gate) ---> A BUG HERE, MAYBE?'
+    print ('build loss function (w/o gate) ---> A BUG HERE, MAYBE?')
 
     # get the loss function
     def compute_prob(probs, y, y_mask=None):
@@ -1071,16 +1071,16 @@ def build_networks(options, model=' ', train=True):
     attenss = tensor.tile(attens, (len(txy1s), 1, 1))
     cost = compute_cost(probs, y1, y1_mask, attenss, txy, txy_mask, gates)
 
-    print 'build sampler (one-step)'
+    print('build sampler (one-step)')
     f_init_xy, f_next_xy   = build_sampler(tparams_xy, options, options['trng'], 'xy_')
 
     if options.get('see_pretrain', False):
-        print 'build old sampler'
+        print('build old sampler')
         f_init_xy0, f_next_xy0 = build_sampler(tparams_xy0, options, options['trng'], 'xy_')
 
     if train:
         # before any regularizer
-        print 'build Cost Function...',
+        print('build Cost Function...',)
         inputs = [x1, x1_mask, y1, y1_mask]
         for k in range(K):
             inputs += [xs[k], xs_mask[k], ys[k], ys_mask[k]]
@@ -1092,7 +1092,7 @@ def build_networks(options, model=' ', train=True):
 
         f_valid = theano.function(inputs, cost, profile=profile)
 
-        print 'build Gradient...',
+        print('build Gradient...',)
         tparams = dict(tparams_xy.items() + tparams_map.items())
 
         cost   = cost.mean()
@@ -1105,14 +1105,14 @@ def build_networks(options, model=' ', train=True):
 
         grads0 = tensor.grad(cost, wrt=itemlist(_tparams))
         grads, g2 = clip(grads0, options['clip_c'])
-        print 'Done'
+        print('Done')
 
         # compile the optimizer, the actual computational graph is compiled here
         lr = tensor.scalar(name='lr')
         outputs = [cost, tensor.sqrt(g2)]
 
 
-        print 'Building Optimizers...',
+        print('Building Optimizers...',)
         f_cost, f_update = eval(options['optimizer'])(
             lr, _tparams, grads, inputs, outputs)
 
@@ -1122,7 +1122,7 @@ def build_networks(options, model=' ', train=True):
 
     else:
         tparams = dict(tparams_xy.items() + tparams_map.items())
-    print 'Done'
+    print('Done')
 
     # put everything into function lists
     funcs['init_xy']   = f_init_xy
@@ -1135,7 +1135,7 @@ def build_networks(options, model=' ', train=True):
 
     funcs['map']       = f_map
 
-    print 'Build Networks... done!'
+    print('Build Networks... done!')
     if train:
         if options.get('see_pretrain', False):
             return funcs, [tparams, tparams_xy0]

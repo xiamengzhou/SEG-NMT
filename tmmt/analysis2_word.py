@@ -1,7 +1,7 @@
 from __future__ import division
 import numpy
 import os
-import  cPickle as pkl
+import  pickle as pkl
 import matplotlib.pylab as plt
 
 # file_list =[[]]*len(range(2500, 10000, 2500))
@@ -9,7 +9,7 @@ file_list_word = []
 for j, i in enumerate(range(2500, 162500, 2500)):
     file = open('/root/workspace/TMNMT/.translate/TM2.B7.dev.translate.iter='+str(i)+'.pkl', 'r')
     file_list_word.append(pkl.load(file))    
-    print i
+    print(i)
     
 action_word = [[] for _ in range(len(file_list_word))]
 gating_word = [[] for _ in range(len(file_list_word))]

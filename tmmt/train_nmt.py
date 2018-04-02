@@ -1,11 +1,12 @@
 from __future__ import division
-from nmt import *
-from layer import *
+from tmmt.nmt import *
+from tmmt.layer import *
 from pprint import pprint
-from setup import setup
-from data_iterator import TextIterator, prepare_data, prepare_cross
+from tmmt.setup import setup
+from tmmt.data_iterator import TextIterator, prepare_data, prepare_cross
 from termcolor import colored as clr
-from translate_gpu import go
+from tmmt.translate_gpu import go
+import pickle as pkl
 
 import itertools
 import threading
@@ -19,9 +20,9 @@ model_options = setup(args.m)
 if model_options['remote']:
     try:
         monitor = Monitor(model_options['address'], model_options['port'])
-        print 'create a remote monitor'
-    except Exception, e:
-        print 'error to create a monitor', e
+        print('create a remote monitor')
+    except Exception:
+        print('error to create a monitor')
         monitor = None
 else:
     monitor = None
@@ -57,7 +58,7 @@ else:
 # print 'save the compiled functions/tparams for temperal usage'
 
 
-print 'Loading data'
+print('Loading data')
 train = TextIterator(model_options['datasets'], model_options['dictionaries'],
                      [0 for _ in range(model_options['n_inputs'])],
                      batch_size=model_options['batch_size'], maxlen=model_options['maxlen'])
@@ -66,7 +67,7 @@ valid = TextIterator(model_options['valid_datasets'], model_options['dictionarie
                      batch_size=model_options['batch_size'], maxlen=500)
 
 
-print clr('-------------------------------------------- Main-Loop -------------------------------------------------', 'yellow')
+print(clr('-------------------------------------------- Main-Loop -------------------------------------------------', 'yellow'))
 
 # ------------------ initlization --------------- #
 best_p       = None
@@ -136,13 +137,13 @@ def execute(inps, lrate, info):
     eidx, uidx = info
     rets = funcs['cost'](*inps)
     cost, g2 = rets[0], rets[1]
-    print 'Epoch {}: update {},'.format(eidx, uidx),
-    print 'cost {:.2f}, g-norm {:.1f}'.format(float(cost), float(g2)),
+    print('Epoch {}: update {},'.format(eidx, uidx),)
+    print('cost {:.2f}, g-norm {:.1f}'.format(float(cost), float(g2)),)
 
     # check for bad numbers, usually we remove non-finite elements
     # and continue training - but not done here
     if numpy.isnan(g2):
-        print 'NaN error again!!!'
+        print('NaN error again!!!')
         raise Exception('Gradient NaN detected')
 
     if numpy.isnan(cost):
@@ -202,7 +203,7 @@ def validate(funcs, options, iterator, verbose=False):
 
 @Timeit
 def savemodel(udix=0):
-    print 'Saving the best model...',
+    print('Saving the best model...',)
     if best_p is not None:
         params = best_p
     else:
@@ -210,16 +211,16 @@ def savemodel(udix=0):
 
     numpy.savez(saveto, history_errs=history_errs, uidx=uidx, **params)
     pkl.dump(model_options, open('%s.pkl' % saveto, 'wb'))
-    print 'Done'
+    print('Done')
 
     # save with uidx
     if not overwrite:
-        print 'Saving the model at iteration {}...'.format(uidx),
+        print('Saving the model at iteration {}...'.format(uidx),)
         saveto_uidx = '{}.iter{}.npz'.format(
             os.path.splitext(saveto)[0], uidx)
         numpy.savez(saveto_uidx, history_errs=history_errs,
                     uidx=uidx, **unzip(tparams))
-        print 'Done'
+        print('Done')
 
 
 class BLEU(threading.Thread):
@@ -233,7 +234,7 @@ class BLEU(threading.Thread):
         self.sleep    = sleep
 
     def run(self):
-        print '[test] Hello, I am Thread: %s.' % (threading.currentThread().getName())
+        print('[test] Hello, I am Thread: %s.' % (threading.currentThread().getName()))
         options = self.options
         go(options['saveto'],
            options['dictionaries'][0],
@@ -252,16 +253,16 @@ class BLEU(threading.Thread):
 
 
 if uidx == 0:
-    print 'save an initial model...'
+    print('save an initial model...')
     savemodel(0)
 
 if not model_options['disable_bleu']:
-    print 'start a BLUE tester...'
+    print('start a BLUE tester...')
     bleuer = BLEU(model_options, bleuFreq, start_steps=(uidx//bleuFreq) * bleuFreq)
     bleuer.start()
 
-print 'start the main loop...'
-for eidx in xrange(max_epochs):
+print('start the main loop...')
+for eidx in range(max_epochs):
     n_samples = 0
 
     for k, inputs in enumerate(train):
@@ -284,15 +285,15 @@ for eidx in xrange(max_epochs):
             history_errs.append(valid_err)
 
             if numpy.isnan(valid_err):
-                print 'NaN detected'
+                print('NaN detected')
                 sys.exit(-1)
 
-            print 'Valid ', valid_err
+            print('Valid ', valid_err)
             if monitor:
                 try:
                     monitor.push({'valid': float(str(valid_err))}, step=int(uidx))
-                except Exception, e:
-                    print e
+                except Exception:
+                    print(e)
 
         xs, xs_mask = zip(*[prepare_data(inputs[k], 500, model_options['voc_sizes'][k])
                             for k in range(0, model_options['n_inputs'], 2)])
@@ -326,24 +327,25 @@ for eidx in xrange(max_epochs):
 
         try:
             execute(inps, lrate, [eidx, uidx])  # train one step.
-        except Exception, e:
-            print clr(e, 'red')
+        except Exception as  e:
+            print(clr(e, 'red'))
             continue
 
         # generate some samples with the model and display them
         if numpy.mod(uidx, sampleFreq) == 0:
-            for jj in xrange(numpy.minimum(5, xs[0].shape[1])):
+            for jj in range(numpy.minimum(5, xs[0].shape[1])):
                 stochastic = True
 
-                print '============================='
+                print('=============================')
                 K = model_options['n_inputs']
                 for k in range(2, K, 2):
-                    print 'Source-TM {}: {}'.format(k//2, idx2seq(inputs[k][jj], k))
-                    print 'Target-TM {}: {}'.format(k//2, idx2seq(inputs[k + 1][jj], k + 1))
+                    print('Source-TM {}: {}'.format(k//2, idx2seq(inputs[k][jj], k)))
+                    print('Target-TM {}: {}'.format(k//2, idx2seq(inputs[k + 1][jj], k + 1)))
 
-                print 'Source-CR: {}'.format(idx2seq(inputs[0][jj], 0))
-                print 'Target-CR: {}'.format(idx2seq(inputs[1][jj], 1))
-                print '----------------------------------------------------------------------------'
+                print('Source-CR: {}'.format(idx2seq(inputs[0][jj], 0)))
+                print('Target-CR: {}'.format(idx2seq(inputs[1][jj], 1)))
+
+                print('----------------------------------------------------------------------------')
 
                 xss = [xs[k][:, jj][:, None] for k in range(1, K//2)]
                 yss = [ys[k][:, jj][:, None] for k in range(1, K//2)]
@@ -399,19 +401,18 @@ for eidx in xrange(max_epochs):
 
 
                     # print 'Sample-CR {}: {}'.format(jj, idx2seq(_ss, 1))
-                    print 'NMT Model: {}'.format(idx2seq(ss0, 1))
+                    print('NMT Model: {}'.format(idx2seq(ss0, 1)))
 
-                print 'Copy Prob: {}'.format(idx2seq(_ss, 1, act))
-                print 'Copy Gate: {}'.format(idx2seq(_ss, 1, gg_))
-                print
+                print('Copy Prob: {}'.format(idx2seq(_ss, 1, act)))
+                print('Copy Gate: {}'.format(idx2seq(_ss, 1, gg_)))
 
         # finish after this many updates
         if uidx >= finish_after:
-            print 'Finishing after %d iterations!' % uidx
+            print('Finishing after %d iterations!' % uidx)
             estop = True
             break
 
-    print 'Seen %d samples' % n_samples
+    print('Seen %d samples' % n_samples)
 
     if estop:
         break
@@ -420,7 +421,7 @@ if best_p is not None:
     zipp(best_p, tparams)
 
 valid_err = validate(funcs, model_options, valid).mean()
-print 'Valid ', valid_err
+print('Valid ', valid_err)
 
 bleuer.join()
 params = copy.copy(best_p)

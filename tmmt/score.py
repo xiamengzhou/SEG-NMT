@@ -1,7 +1,7 @@
 import argparse
 import os
 
-from setup import setup
+from tmmt.setup import setup
 parser = argparse.ArgumentParser()
 parser.add_argument('-m', type=str, default='fren')
 parser.add_argument('-mm', default=0)
@@ -16,7 +16,7 @@ if args.ss:
 elif args.mm > 0:
     hyp += '-mm=' + str(args.mm) + '.multi2'
 
-print 'compute BLEU score for {}'.format(hyp)
+print('compute BLEU score for {}'.format(hyp))
 os.system("sed -i 's/@@ //g' {}".format(hyp))
 os.system('perl ./data/multi-bleu.perl {0} < {1} | tee {1}.score'.format(ref, hyp))
-print 'done'
+print('done')

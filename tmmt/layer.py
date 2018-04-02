@@ -48,8 +48,8 @@ class Timeit(object):
     def __call__(self, *args, **kws):
         start_t = time.time()
         result = self._wrapped(*args, **kws)
-        print '{}: elapsed {:.4f} secs.'.format(self._wrapped.__name__,
-                                                time.time() - start_t)
+        print('{}: elapsed {:.4f} secs.'.format(self._wrapped.__name__,
+                                                time.time() - start_t))
         return result
 
 
@@ -63,7 +63,7 @@ class Monitor(object):
             if clean:
                 self.cc.remove_experiment(name)
                 self.exp = self.cc.create_experiment(name)
-                print 'clean and creat a new one'
+                print('clean and creat a new one')
             else:
                 self.exp = self.cc.open_experiment(name)
         else:
@@ -118,14 +118,14 @@ def init_tparams(params):
 # load parameters
 def load_params(path, params):
     pp = numpy.load(path)
-    print 'loading ...'
+    print( 'loading ...')
     for it, (kk, vv) in enumerate(params.iteritems()):
         if kk not in pp:
             warnings.warn('%s is not in the archive' % kk)
             continue
-        print '{}\t'.format(kk),
+        print('{}\t'.format(kk),)
         if it % 5 == 0:
-            print ''
+            print('')
         params[kk] = pp[kk]
 
     return params
@@ -134,16 +134,16 @@ def load_params(path, params):
 # load parameters-2
 def load_params2(path, params, mode=''):
     pp = numpy.load(path)
-    print 'loading ...'
+    print ('loading ...')
     for it, (kk, vv) in enumerate(params.iteritems()):
         if kk[:3] == mode:
             if kk[3:] not in pp:
                 warnings.warn('%s is not in the archive' % kk)
                 continue
 
-            print kk,
+            print(kk,)
             if it % 5 == 0:
-                print ''
+                print ('')
             params[kk] = pp[kk[3:]]
 
     return params
@@ -288,7 +288,7 @@ def param_init_bllayer(options, params, prefix='bi',
     if not eye:
         params[_p(prefix, 'M')] = norm_weight(nin1, nin2, scale=0.01, ortho=True)
     else:
-        print 'bi-eye init'
+        print('bi-eye init')
         params[_p(prefix, 'M')] = numpy.eye(nin1, nin2, dtype='float32')
 
     if bias:
@@ -329,7 +329,7 @@ def param_init_bglayer(options, params, prefix='bg',
     if eye:
         params[_p(prefix, 'Md')] = numpy.ones((nin1,), dtype='float32')
     else:
-        print 'bd-eye init'
+        print ('bd-eye init')
         params[_p(prefix, 'Md')] = norm_weight(nin1, 1, scale=0.01)[:, 0]
 
     if bias:
@@ -368,7 +368,7 @@ def param_init_bdlayer(options, params, prefix='bd',
     if eye:
         params[_p(prefix, 'Md')] = numpy.ones((nin1,), dtype='float32')
     else:
-        print 'bd-eye init'
+        print('bd-eye init')
         params[_p(prefix, 'Md')] = norm_weight(nin1, 1, scale=0.01)[:, 0]
 
 
@@ -617,6 +617,7 @@ def gru_cond_layer(tparams, state_below, options, prefix='gru',
                     pctx_, cc_,
                     U, Wc, W_comb_att, U_att, c_tt, Ux, Wcx,
                     U_nl, Ux_nl, b_nl, bx_nl):
+
         preact1 = tensor.dot(h_, U)
         preact1 += x_
         preact1 = tensor.nnet.sigmoid(preact1)
@@ -633,7 +634,7 @@ def gru_cond_layer(tparams, state_below, options, prefix='gru',
         h1 = u1 * h_ + (1. - u1) * h1
         h1 = m_[:, None] * h1 + (1. - m_)[:, None] * h_
 
-        # attention
+        # attention ??? Question about the attention
         pstate_ = tensor.dot(h1, W_comb_att)
         pctx__ = pctx_ + pstate_[None, :, :]
         #pctx__ += xc_

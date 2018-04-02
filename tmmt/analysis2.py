@@ -1,7 +1,7 @@
 from __future__ import division
 import numpy
 import os
-import  cPickle as pkl
+import  pickle as pkl
 import matplotlib.pylab as plt
 
 # file_list =[[]]*len(range(2500, 10000, 2500))
@@ -9,7 +9,7 @@ file_list = []
 for j, i in enumerate(range(2500, 190000, 2500)):
     file = open('/root/workspace/TMNMT/.translate/TM2.B7.bpe.dev.translate.iter='+str(i)+'.pkl', 'r')
     file_list.append(pkl.load(file))    
-    print i
+    print(i)
     
 action = [[] for _ in range(len(file_list))]
 gating = [[] for _ in range(len(file_list))]
@@ -55,7 +55,7 @@ file_list_word = []
 for j, i in enumerate(range(2500, 162500, 2500)):
     file = open('/root/workspace/TMNMT/.translate/TM2.B7.dev.translate.iter='+str(i)+'.pkl', 'r')
     file_list_word.append(pkl.load(file))    
-    print i
+    print(i)
     
 action_word = [[] for _ in range(len(file_list_word))]
 gating_word = [[] for _ in range(len(file_list_word))]
@@ -98,11 +98,11 @@ for i in range(len(file_list_word)):
     aver_action_word.append(numpy.asarray(action_init).mean())
     aver_gating_word.append(numpy.asarray(gating_init).mean())
 
-print aver_action_word
-print aver_gating_word
+print(aver_action_word)
+print (aver_gating_word)
 
-print aver_action
-print aver_gating
+print(aver_action)
+print (aver_gating)
 plt.plot(range(2500, 190000, 2500),aver_action, '-b',label='aver-action')
 plt.plot(range(2500, 190000, 2500),aver_gating,  '-r', label='aver-gating')
 plt.plot(range(2500, 162500, 2500),aver_action_word, '-g',label='aver-action_word')

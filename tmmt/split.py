@@ -2,7 +2,7 @@ from __future__ import division
 import numpy
 import editdistance
 import os
-from setup import setup
+from tmmt.setup import setup
 import argparse
 
 parser = argparse.ArgumentParser()
@@ -63,7 +63,7 @@ for j in numpy.arange(len(scores)):
     index[i].append(j)
 
 for i in numpy.arange(10):
-    print len(index[i])
+    print(len(index[i]))
 
 
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> #
@@ -105,7 +105,7 @@ for i in numpy.arange(len(index)):
 
 
 
-print 'compute BLEU scores for each of the files.'
+print('compute BLEU scores for each of the files.')
 hyp = []
 ref = []
 for i in numpy.arange(10):
@@ -115,6 +115,6 @@ for i in numpy.arange(10):
 for i in numpy.arange(10):
     os.system("sed -i 's/@@ //g' {}".format(hyp[i]))
     os.system('perl ./data/multi-bleu.perl {0} < {1} | tee {1}.score'.format(ref[i], hyp[i]))
-print 'done'
+print('done')
 
 

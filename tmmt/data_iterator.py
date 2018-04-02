@@ -1,6 +1,6 @@
 import numpy
 
-import cPickle as pkl
+import pickle as pkl
 import gzip
 
 
