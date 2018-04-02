@@ -43,7 +43,7 @@ worddicts   = [None] * len(model_options['dictionaries'])
 worddicts_r = [None] * len(model_options['dictionaries'])
 for ii, dd in enumerate(model_options['dictionaries']):
     with open(dd, 'rb') as f:
-        worddicts[ii] = pkl.load(f)
+        worddicts[ii] = pkl.load(f, encoding="utf-8")
     worddicts_r[ii] = dict()
     for kk, vv in worddicts[ii].iteritems():
         worddicts_r[ii][vv] = kk
