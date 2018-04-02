@@ -4,7 +4,7 @@ import argparse
 import logging
 import os
 import tarfile
-import urllib3
+from urllib.request import urlopen
 
 TRAIN_DATA_URL = 'http://www.statmt.org/europarl/v7/fr-en.tgz'
 VALID_DATA_URL = 'http://matrix.statmt.org/test_sets/newstest2011.tgz'
@@ -33,9 +33,7 @@ def download_and_write_file(url, file_name):
         path = os.path.dirname(file_name)
         if not os.path.exists(path):
             os.makedirs(path)
-        http = urllib3.PoolManager()
-
-        u = http.request('GET', url)
+        u = urlopen(url)
         f = open(file_name, 'wb')
         meta = u.info()
         file_size = int(meta.getheaders("Content-Length")[0])
