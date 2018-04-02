@@ -26,7 +26,6 @@ parser.add_argument("--target-dev", type=str, default="newstest2011.en",
 parser.add_argument("--outdir", type=str, default=".",
                     help="Output directory")
 
-
 def download_and_write_file(url, file_name):
     logger.info("Downloading [{}]".format(url))
     if not os.path.exists(file_name):
@@ -36,7 +35,7 @@ def download_and_write_file(url, file_name):
         u = urlopen(url)
         f = open(file_name, 'wb')
         meta = u.info()
-        file_size = int(meta.getheaders("Content-Length")[0])
+        file_size = int(meta.get("Content-Length"))
         logger.info("...saving to: %s Bytes: %s" % (file_name, file_size))
         file_size_dl = 0
         block_sz = 8192
