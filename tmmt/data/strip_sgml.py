@@ -10,7 +10,7 @@ def main():
         text = re.sub('<[^<]+>', "", line).strip()
         if len(text) == 0:
             continue
-        print >>fout, text
+        fout.write(text)
                 
 
 if __name__ == "__main__":

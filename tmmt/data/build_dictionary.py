@@ -1,5 +1,5 @@
 import numpy
-import cPickle as pkl
+import pickle as pkl
 
 import sys
 import fileinput
@@ -8,7 +8,7 @@ from collections import OrderedDict
 
 def main():
     for filename in sys.argv[1:]:
-        print 'Processing', filename
+        print('Processing', filename)
         word_freqs = OrderedDict()
         with open(filename, 'r') as f:
             for line in f:
@@ -32,7 +32,7 @@ def main():
         with open('%s.pkl'%filename, 'wb') as f:
             pkl.dump(worddict, f)
 
-        print 'Done'
+        print('Done')
 
 if __name__ == '__main__':
     main()
